@@ -1,0 +1,6 @@
+{
+  "functions": {
+    "api/holidays.js": { "maxDuration": 60 },
+    "api/schedule.js": { "maxDuration": 60 }
+  }
+}

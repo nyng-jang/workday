@@ -1,0 +1,8 @@
+{
+  "name": "contract-staff-scheduler",
+  "version": "1.0.0",
+  "private": true,
+  "description": "임기제 직원 근무·휴무 월별 근무표 생성기 (Vercel)",
+  "engines": { "node": ">=18" },
+  "scripts": { "test": "node test.js" }
+}

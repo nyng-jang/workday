@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>임기제 근무표 생성기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f6f8; --card:#fff; --ink:#1b1f27; --sub:#5b6472; --line:#e3e6ec;
+  --brand:#1d4ed8; --brand-ink:#fff; --red:#d92d20; --blue:#2563eb;
+  --p0:#2563eb; --p1:#ea580c; --p2:#059669; --p3:#9333ea;
+  --p0bg:#dbeafe; --p1bg:#ffedd5; --p2bg:#d1fae5; --p3bg:#f3e8ff;
+  --warn:#92400e; --warnbg:#fef3c7; --ok:#166534; --okbg:#dcfce7;
+}
+@media (prefers-color-scheme:dark){
+  :root{ --bg:#0f1218; --card:#171b23; --ink:#e8ebf1; --sub:#9aa4b2; --line:#2a303c; --brand:#3b82f6; --red:#f87171; --blue:#60a5fa;
+    --p0:#93c5fd; --p1:#fdba74; --p2:#6ee7b7; --p3:#d8b4fe;
+    --p0bg:#1e3a8a; --p1bg:#7c2d12; --p2bg:#064e3b; --p3bg:#581c87;
+    --warn:#fcd34d; --warnbg:#3a2a07; --ok:#86efac; --okbg:#0d3320; }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Sans KR',system-ui,-apple-system,'Malgun Gothic',sans-serif;line-height:1.5;font-size:15px}
+.wrap{max-width:1100px;margin:0 auto;padding:24px 16px 64px}
+h1{font-size:22px;margin:0 0 4px} .lead{color:var(--sub);margin:0 0 20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+.card h2{font-size:16px;margin:0 0 12px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+label{display:block;font-size:13px;color:var(--sub);margin-bottom:4px}
+select,input[type=number],input[type=text],input[type=password],textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+textarea{min-height:84px;resize:vertical}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media (max-width:860px){.grid4{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:520px){.grid4{grid-template-columns:1fr}}
+.person{border:1px solid var(--line);border-radius:10px;padding:10px;border-top-width:4px}
+.person h3{margin:0 0 6px;font-size:15px}
+.person details{margin-top:6px;font-size:13px;color:var(--sub)} .person summary{cursor:pointer}
+.btn{font:inherit;border:0;border-radius:8px;padding:10px 16px;cursor:pointer;font-weight:700;background:var(--brand);color:var(--brand-ink)}
+.btn.sec{background:transparent;color:var(--ink);border:1px solid var(--line);font-weight:500}
+.btn:disabled{opacity:.5;cursor:wait}
+.hint{font-size:13px;color:var(--sub);margin:8px 0 0}
+.steps{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 0}
+.step{font-size:13px;padding:4px 10px;border-radius:99px;border:1px solid var(--line);color:var(--sub)}
+.step.run{border-color:var(--brand);color:var(--brand)} .step.done{background:var(--okbg);color:var(--ok);border-color:transparent}
+.msg{padding:10px 12px;border-radius:8px;font-size:14px;margin:8px 0}
+.msg.warn{background:var(--warnbg);color:var(--warn)} .msg.err{background:#fee2e2;color:#991b1b}
+@media (prefers-color-scheme:dark){.msg.err{background:#3b1212;color:#fca5a5}}
+.hol-row{display:grid;grid-template-columns:130px 1fr 120px 36px;gap:8px;margin-bottom:6px;align-items:center}
+@media (max-width:520px){.hol-row{grid-template-columns:1fr 1fr 36px}.hol-row .t{display:none}}
+.x{background:none;border:1px solid var(--line);border-radius:6px;color:var(--sub);cursor:pointer;height:34px}
+.src a{color:var(--blue);font-size:13px;word-break:break-all}
+.tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.tab{font:inherit;padding:6px 14px;border-radius:99px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+.tab[aria-selected=true]{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+#cal{background:var(--card);padding:12px;border-radius:10px}
+.cal-title{font-weight:700;font-size:18px;margin:0 0 8px}
+.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:13px;margin-bottom:8px}
+.chip{display:inline-block;border-radius:6px;padding:1px 6px;font-size:12px;font-weight:500;margin:1px 2px 1px 0;white-space:nowrap}
+.c0{background:var(--p0bg);color:var(--p0)}.c1{background:var(--p1bg);color:var(--p1)}.c2{background:var(--p2bg);color:var(--p2)}.c3{background:var(--p3bg);color:var(--p3)}
+table.cal{border-collapse:collapse;width:100%;table-layout:fixed}
+table.cal th{font-size:13px;padding:6px 0;border:1px solid var(--line);background:var(--bg)}
+table.cal th:first-child,.sun .dn{color:var(--red)} table.cal th:last-child,.sat .dn{color:var(--blue)}
+table.cal td{border:1px solid var(--line);vertical-align:top;height:96px;padding:4px;font-size:12px}
+table.cal td.hol{background:rgba(217,45,32,.07)} table.cal td.hol .dn{color:var(--red)}
+.dn{font-weight:700;font-size:13px} .hn{color:var(--red);font-size:11px;margin-bottom:2px}
+.wc{color:var(--sub);font-size:11px;margin-top:2px}
+table.st{border-collapse:collapse;width:100%;margin-top:12px;font-size:14px}
+table.st th,table.st td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:center}
+table.st th:first-child,table.st td:first-child{text-align:left}
+.note{font-size:13px;color:var(--sub)} code,pre{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;white-space:pre-wrap;overflow:auto}
+.pl{margin:4px 0;font-size:13px}
+@media print{body{background:#fff}.no-print{display:none!important}.card{border:0;padding:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>임기제 근무표 생성기</h1>
+  <p class="lead">인물별 특이사항을 입력하면, 최신 공휴일을 먼저 조회한 뒤 규칙에 맞는 근무표 후보를 달력으로 보여줍니다.</p>
+
+  <section class="card no-print">
+    <h2>1. 대상 월과 특이사항</h2>
+    <div class="row">
+      <div style="width:110px"><label for="year">연도</label><select id="year"></select></div>
+      <div style="width:90px"><label for="month">월</label><select id="month"></select></div>
+      <div style="width:150px"><label for="comp">월 보상휴가(일/인)</label><input type="number" id="comp" min="0" max="3" value="1"></div>
+      <div style="width:170px"><label for="code">접근 코드 (설정한 경우)</label><input type="password" id="code" autocomplete="off"></div>
+    </div>
+    <p class="hint">월 보상휴가는 공무원 휴일 수와 맞추기 위한 값입니다. 연간 약 13일이면 월 1일 정도입니다.</p>
+    <div class="grid4" id="people" style="margin-top:12px"></div>
+    <p class="hint">예) “일요일은 무조건 쉬어야 함”, “화·목 휴무”, “15일은 반드시 휴무”, “휴일이 연속되면 안 됨”. 입력한 내용은 LLM에 질문으로 전달되어 조건으로 변환됩니다.</p>
+    <div class="row" style="margin-top:12px">
+      <button class="btn" id="go">근무표 생성</button>
+      <button class="btn sec" id="showq" type="button">LLM에 전달될 질문 보기</button>
+    </div>
+    <div class="steps" id="steps" aria-live="polite">
+      <span class="step" data-s="1">① 공휴일 조회</span><span class="step" data-s="2">② 특이사항 해석</span><span class="step" data-s="3">③ 근무표 계산</span>
+    </div>
+    <pre id="qbox" hidden></pre>
+    <div id="errs"></div>
+  </section>
+
+  <section class="card no-print" id="holcard" hidden>
+    <h2>조회된 공휴일 <span class="note" id="holmeta"></span></h2>
+    <div id="holmsgs"></div>
+    <div id="hollist"></div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn sec" id="addhol" type="button">공휴일 직접 추가</button>
+      <button class="btn sec" id="redo" type="button">이 공휴일로 다시 계산</button>
+    </div>
+    <div class="src" id="srcs" style="margin-top:8px"></div>
+    <p class="hint">정부가 발표를 바꾸면 반영이 늦을 수 있어, 계산 전에 이 목록을 한 번 확인해 주세요. 직접 고친 목록으로 다시 계산할 수 있습니다.</p>
+  </section>
+
+  <section class="card" id="rescard" hidden>
+    <h2>2. 근무표 후보</h2>
+    <div class="tabs no-print" id="tabs" role="tablist"></div>
+    <div id="cal"></div>
+    <div class="row no-print" style="margin-top:12px">
+      <button class="btn" id="png">이미지(PNG)로 저장</button>
+      <button class="btn sec" id="print">인쇄</button>
+      <button class="btn sec" id="commit">이 안 확정 → 이월값 반영</button>
+    </div>
+    <p class="hint no-print">이월값 반영: 이번 달 공휴일 겹침으로 생긴 추가 휴무를 각자 누적에 더해 두면, 다음 달 계산에서 연간 휴일 수가 맞도록 자동 보정됩니다.</p>
+    <div id="interp" style="margin-top:12px"></div>
+  </section>
+</div>
+
+<script src="/vendor/html2canvas.min.js"></script>
+<script>
+const NAMES = ['이지은','이동민','최빛나','김재명'];
+const DOW = ['일','월','화','수','목','금','토'];
+const $ = (id) => document.getElementById(id);
+let state = { holidays:{}, result:null, sel:0, year:0, month:0 };
+
+const store = {
+  get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+};
+
+(function init(){
+  const now = new Date(), y = now.getFullYear();
+  for (let i=y-1;i<=y+2;i++) $('year').add(new Option(i+'년', i));
+  for (let m=1;m<=12;m++) $('month').add(new Option(m+'월', m));
+  // 기본값: 다음 달
+  let nm = now.getMonth()+2, ny = y; if (nm>12){ nm=1; ny++; }
+  $('year').value = ny; $('month').value = nm;
+  const carry = JSON.parse(store.get('carry')||'{}');
+  $('people').innerHTML = NAMES.map((n,i)=>`
+    <div class="person" style="border-top-color:var(--p${i})">
+      <h3><span class="chip c${i}">${n}</span> 특이사항</h3>
+      <textarea id="note${i}" placeholder="예) 일요일은 무조건 쉬어야 함" aria-label="${n} 특이사항"></textarea>
+      <details><summary>누적 추가휴무 이월값</summary>
+        <label for="carry${i}" style="margin-top:6px">올해 지금까지 공휴일 겹침으로 받은 추가 휴무(일)</label>
+        <input type="number" id="carry${i}" min="0" max="30" value="${carry[n]||0}"></details>
+    </div>`).join('');
+  const code = store.get('code'); if (code) $('code').value = code;
+})();
+
+const notes = () => Object.fromEntries(NAMES.map((n,i)=>[n,$('note'+i).value]));
+const carries = () => Object.fromEntries(NAMES.map((n,i)=>[n,parseInt($('carry'+i).value,10)||0]));
+const hdr = () => { const h={'content-type':'application/json'}; const c=$('code').value; if(c){ h['x-access-code']=c; store.set('code',c);} return h; };
+const pad = (n)=>String(n).padStart(2,'0');
+const esc = (s)=>String(s).replace(/[&<>"]/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function setStep(n, st){ const el=document.querySelector(`.step[data-s="${n}"]`); el.className='step '+(st||''); }
+function showErr(html){ $('errs').innerHTML = html ? `<div class="msg err" role="alert">${html}</div>` : ''; }
+
+$('showq').onclick = () => {
+  const y=$('year').value,m=$('month').value, nt=notes();
+  $('qbox').textContent = `${y}년 ${m}월 임기제 직원 4명의 특이사항입니다.\n` + NAMES.map(n=>`- ${n}: ${nt[n].trim()||'(특이사항 없음)'}`).join('\n') + '\n\n(실제 전송 시 조건 필드 설명과 출력 형식이 함께 붙습니다)';
+  $('qbox').hidden = !$('qbox').hidden;
+};
+
+async function run(lookup){
+  showErr(''); $('go').disabled=true; $('redo').disabled=true;
+  ['1','2','3'].forEach(s=>setStep(s,''));
+  const year=parseInt($('year').value,10), month=parseInt($('month').value,10);
+  try{
+    if (lookup){
+      setStep(1,'run');
+      const r = await fetch('/api/holidays',{method:'POST',headers:hdr(),body:JSON.stringify({year,month})});
+      const d = await r.json(); if(!r.ok) throw new Error(d.error||'공휴일 조회 실패');
+      state.holidays = d.holidays; renderHolidays(d);
+    }
+    setStep(1,'done'); setStep(2,'run');
+    const body = { year, month, comp:parseInt($('comp').value,10)||0, notes:notes(), carry:carries(), holidays: collectHolidays() };
+    const p = fetch('/api/schedule',{method:'POST',headers:hdr(),body:JSON.stringify(body)});
+    setTimeout(()=>{ if($('go').disabled){ setStep(2,'done'); setStep(3,'run'); } }, 6000);
+    const r2 = await p; const d2 = await r2.json();
+    if(!r2.ok) throw new Error(d2.error||'계산 실패');
+    setStep(2,'done');
+    if(!d2.ok){ setStep(3,''); showErr(esc(d2.error)); renderInterp(d2); $('rescard').hidden=false; $('tabs').innerHTML=''; $('cal').innerHTML=''; return; }
+    setStep(3,'done');
+    state.result=d2; state.sel=0; state.year=year; state.month=month;
+    renderResult();
+  }catch(e){ showErr(esc(e.message)); ['1','2','3'].forEach(s=>{ if(document.querySelector(`.step[data-s="${s}"]`).className.includes('run')) setStep(s,''); }); }
+  finally{ $('go').disabled=false; $('redo').disabled=false; }
+}
+$('go').onclick = ()=>run(true);
+$('redo').onclick = ()=>run(false);
+
+/* ---------- 공휴일 편집 ---------- */
+function renderHolidays(d){
+  $('holcard').hidden=false;
+  const checked = d.checkedAt ? new Date(d.checkedAt).toLocaleString('ko-KR') : '';
+  $('holmeta').textContent = d ? `· ${checked} 조회${d.verified?' (웹 검색 확인)':' (검색 미확인)'}` : '';
+  $('holmsgs').innerHTML = (d.warnings||[]).map(w=>`<div class="msg warn">${esc(w)}</div>`).join('') + (d.note?`<div class="msg warn">기본값과 다른 점: ${esc(d.note)}</div>`:'');
+  const mm = pad(d.month);
+  const rows = Object.entries(d.holidays).sort();
+  $('hollist').innerHTML = rows.length ? '' : '<p class="note">이 달에는 공휴일이 없습니다.</p>';
+  rows.forEach(([date,v])=>addHolRow(date,v.name,v.type));
+  $('srcs').innerHTML = (d.sources||[]).length ? '<div class="note">참고한 출처</div>'+d.sources.slice(0,6).map(s=>`<div><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a></div>`).join('') : '';
+}
+function addHolRow(date='',name='',type='공휴일'){
+  const y=$('year').value, m=pad($('month').value);
+  const div=document.createElement('div'); div.className='hol-row';
+  div.innerHTML=`<input type="text" class="hd" value="${esc(date||`${y}-${m}-`)}" aria-label="날짜" placeholder="YYYY-MM-DD">
+    <input type="text" class="hn2" value="${esc(name)}" aria-label="이름" placeholder="공휴일 이름">
+    <select class="t" aria-label="종류">${['공휴일','대체공휴일','임시공휴일'].map(t=>`<option${t===type?' selected':''}>${t}</option>`).join('')}</select>
+    <button class="x" type="button" aria-label="삭제">×</button>`;
+  div.querySelector('.x').onclick=()=>div.remove();
+  $('hollist').appendChild(div);
+}
+$('addhol').onclick=()=>addHolRow();
+function collectHolidays(){
+  const out={}; const y=$('year').value, m=pad($('month').value);
+  document.querySelectorAll('#hollist .hol-row').forEach(r=>{
+    const d=r.querySelector('.hd').value.trim();
+    if(new RegExp(`^${y}-${m}-\\d{2}$`).test(d)) out[d]={name:r.querySelector('.hn2').value||'공휴일',type:r.querySelector('.t').value};
+  });
+  return out;
+}
+
+/* ---------- 결과 ---------- */
+function renderResult(){
+  const r=state.result; $('rescard').hidden=false;
+  $('tabs').innerHTML = r.options.map((o,i)=>`<button class="tab" role="tab" aria-selected="${i===state.sel}" data-i="${i}">${i+1}안</button>`).join('');
+  document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{ state.sel=+t.dataset.i; renderResult(); });
+  const o=r.options[state.sel], {year,month}=state;
+  const first=new Date(Date.UTC(year,month-1,1)).getUTCDay();
+  let html=`<p class="cal-title">${year}년 ${month}월 근무표 (${state.sel+1}안)</p>
+   <div class="legend">${NAMES.map((n,i)=>`<span class="chip c${i}">${n}</span>`).join('')}<span class="note">칩이 붙은 사람이 그날 휴무입니다.</span></div>
+   <table class="cal"><thead><tr>${DOW.map(d=>`<th>${d}</th>`).join('')}</tr></thead><tbody><tr>`;
+  for(let i=0;i<first;i++) html+='<td></td>';
+  o.days.forEach((d,idx)=>{
+    if((first+idx)%7===0 && idx>0) html+='</tr><tr>';
+    const cls=[d.dow===0?'sun':'',d.dow===6?'sat':'',d.hol?'hol':''].join(' ');
+    html+=`<td class="${cls}"><div class="dn">${+d.date.slice(8)}</div>${d.hol?`<div class="hn">${esc(d.hol.name)}</div>`:''}
+      <div>${d.off.map(p=>`<span class="chip c${p}">${NAMES[p]}</span>`).join('')}</div><div class="wc">근무 ${4-d.off.length}명</div></td>`;
+  });
+  const tail=(first+o.days.length)%7; if(tail) for(let i=tail;i<7;i++) html+='<td></td>';
+  html+='</tr></tbody></table>';
+  html+=`<table class="st"><thead><tr><th>이름</th><th>총 휴무</th><th>인정 휴무<br><span class="note">(공휴일 제외)</span></th><th>주말 휴무</th><th>공휴일 겹침<br><span class="note">(대체휴무 발생)</span></th><th>근무일</th></tr></thead><tbody>`
+   +o.stats.map((s,i)=>`<tr><td><span class="chip c${i}">${s.name}</span></td><td>${s.off}</td><td>${s.counted}</td><td>${s.weekendOff}</td><td>${s.holidayOff}</td><td>${s.work}</td></tr>`).join('')
+   +`</tbody></table><p class="note">참고: 공무원 휴일(주말+공휴일)은 이 달 ${r.civilOff}일입니다. 임기제는 인정 휴무 기준 1인당 ${r.perPersonCounted.join('/')}일입니다. 공휴일에 겹친 휴무는 인정 휴무에 넣지 않고 대체휴무로 따로 더해집니다.</p>`;
+  $('cal').innerHTML=html;
+  renderInterp(r);
+}
+function renderInterp(r){
+  const lines=NAMES.map((n,i)=>{
+    const c=r.parsed?.[n]; if(!c) return '';
+    const parts=[];
+    if(c.mustOffWeekdays.length) parts.push('휴무 요일: '+c.mustOffWeekdays.map(d=>DOW[d]).join('·'));
+    if(c.mustWorkWeekdays.length) parts.push('근무 요일: '+c.mustWorkWeekdays.map(d=>DOW[d]).join('·'));
+    if(c.mustOffDates.length) parts.push('휴무일: '+c.mustOffDates.map(d=>+d.slice(8)+'일').join(', '));
+    if(c.mustWorkDates.length) parts.push('근무일: '+c.mustWorkDates.map(d=>+d.slice(8)+'일').join(', '));
+    if(c.noConsecutiveOff) parts.push('휴무 연속 금지');
+    const un=(r.unparsed?.[n]||[]).map(u=>`<span class="msg warn" style="display:inline-block;padding:2px 8px;margin:0 4px">반영 못 함: ${esc(u)}</span>`).join('');
+    return `<div class="pl"><span class="chip c${i}">${n}</span> ${parts.length?esc(parts.join(' / ')):'<span class="note">입력된 조건 없음</span>'} ${un}</div>`;
+  }).join('');
+  const w=(r.warnings||[]).map(x=>`<div class="msg warn">${esc(x)}</div>`).join('');
+  $('interp').innerHTML=`<div class="note" style="margin-bottom:4px">LLM이 이해한 조건 (이 내용이 계산에 사용됩니다)</div>${lines}${w}`;
+}
+
+$('png').onclick=async()=>{
+  if(typeof html2canvas==='undefined'){ showErr('이미지 저장 라이브러리를 불러오지 못했습니다. 인쇄(PDF 저장)를 이용해 주세요.'); return; }
+  const bg=getComputedStyle(document.body).backgroundColor;
+  const cv=await html2canvas($('cal'),{scale:2,backgroundColor:getComputedStyle($('cal')).backgroundColor||bg});
+  const a=document.createElement('a'); a.download=`근무표_${state.year}-${pad(state.month)}_${state.sel+1}안.png`; a.href=cv.toDataURL('image/png'); a.click();
+};
+$('print').onclick=()=>window.print();
+$('commit').onclick=()=>{
+  const o=state.result.options[state.sel], c=carries();
+  const next={}; o.stats.forEach(s=>{ next[s.name]=(c[s.name]||0)+s.holidayOff; });
+  NAMES.forEach((n,i)=>{ $('carry'+i).value=next[n]; });
+  store.set('carry',JSON.stringify(next));
+  alert('이월값을 반영했습니다. 다음 달 계산에 자동 보정됩니다. (이 브라우저에 저장됩니다. 매년 1월에는 0으로 초기화해 주세요.)');
+};
+</script>
+</body>
+</html>
