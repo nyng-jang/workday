@@ -1,6 +1,6 @@
 'use strict';
 // 근무표를 계산하기 전에 매번 호출: 해당 월의 한국 공휴일·대체공휴일·임시공휴일을 웹 검색으로 조회
-const { callClaude, extractJson, checkAccess, MODEL } = require('./_lib/llm');
+const { callLLM, extractJson, checkAccess, MODEL } = require('./_lib/llm');
 const { baselineFor } = require('./_lib/baseline');
 
 module.exports = async function handler(req, res) {
@@ -20,9 +20,9 @@ module.exports = async function handler(req, res) {
 
   try {
     const baseList = [...base].map(([d, v]) => `${d} ${v.name}`).join('\n') || '(없음)';
-    const { text, sources: src } = await callClaude({
-      search: true, maxTokens: 1500,
-      system: '당신은 대한민국 공휴일 확인 담당자입니다. 반드시 웹 검색으로 최신 정부 발표(행정안전부·인사혁신처 보도자료, 관보, 월력요항)를 확인한 뒤 답합니다. 응답은 JSON 객체 하나만 출력합니다.',
+    const { text, sources: src } = await callLLM({
+      search: true, maxTokens: 3000,
+      system: '당신은 대한민국 공휴일 확인 담당자입니다. 반드시 구글 검색으로 최신 정부 발표(행정안전부·인사혁신처 보도자료, 관보, 월력요항)를 확인한 뒤 답합니다. 응답은 JSON 객체 하나만 출력합니다.',
       user: `${year}년 ${month}월에 해당하는 대한민국 법정 공휴일·대체공휴일·임시공휴일·선거일(공휴일로 지정된 경우)을 모두 찾아주세요.
 아래는 코드에 내장된 기본 목록입니다. 검색 결과와 대조해서 누락·추가·삭제된 것이 있는지 확인하세요.
 [기본 목록]
@@ -45,7 +45,7 @@ ${baseList}
     for (const [d, v] of base) if (!(j.holidays || []).some((h) => h.date === d)) warnings.push(`${d} ${v.name}: 검색 결과에는 없지만 내장 기본값이라 유지했습니다. 확인해 주세요.`);
   } catch (e) {
     warnings.push(e.code === 'NO_KEY'
-      ? 'API 키가 없어 공휴일 조회를 건너뛰고 내장 기본값만 사용했습니다. 임시공휴일·선거일은 반영되지 않았습니다.'
+      ? 'GEMINI_API_KEY가 없어 공휴일 조회를 건너뛰고 내장 기본값만 사용했습니다. 임시공휴일·선거일은 반영되지 않았습니다.'
       : `공휴일 조회에 실패해 내장 기본값만 사용했습니다 (${e.message}). 임시공휴일·선거일은 반영되지 않았을 수 있습니다.`);
   }
 

@@ -1,6 +1,6 @@
 'use strict';
 // 인물별 특이사항(자연어) → LLM이 제약 조건으로 해석 → 코드가 근무표 계산
-const { callClaude, extractJson, checkAccess } = require('./_lib/llm');
+const { callLLM, extractJson, checkAccess } = require('./_lib/llm');
 const { solve, DOW, daysIn } = require('./_lib/solver');
 
 const NAMES = ['이지은', '이동민', '최빛나', '김재명'];
@@ -49,9 +49,9 @@ module.exports = async function handler(req, res) {
 
   if (NAMES.some((n) => notes[n].trim())) {
     try {
-      const { text } = await callClaude({
+      const { text } = await callLLM({
         system: '당신은 근무표 제약 조건 변환기입니다. 사용자가 적은 특이사항을 지정된 JSON 필드로만 변환하고, 추측해서 조건을 만들지 않습니다. JSON 객체 하나만 출력합니다.',
-        user: question, maxTokens: 1500,
+        user: question, json: true, maxTokens: 3000,
       });
       const j = extractJson(text);
       for (const n of NAMES) {

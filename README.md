@@ -11,13 +11,13 @@
 ## 배포 (Vercel)
 1. 이 폴더를 GitHub 저장소에 올리거나 `vercel` CLI로 배포합니다. 빌드 설정은 필요 없습니다 (Framework: Other).
 2. Vercel 프로젝트 → Settings → Environment Variables
-   - `ANTHROPIC_API_KEY` (필수)
+   - `GEMINI_API_KEY` (필수): https://aistudio.google.com/app/api-keys 에서 발급한 키
    - `ACCESS_CODE` (권장): 설정하면 작업자만 아는 코드를 입력해야 API가 동작합니다. 주소를 아는 누구나 API 비용을 쓰는 것을 막아 줍니다.
-   - `ANTHROPIC_MODEL` (선택, 기본 claude-sonnet-5-5)
+   - `GEMINI_MODEL` (선택, 기본 gemini-3.8-flash)
 3. 환경변수 추가 후 재배포합니다.
 
 ## 공휴일 조회 방식
-- 계산 버튼을 누를 때마다 `/api/holidays`가 웹 검색으로 해당 월 공휴일을 조회합니다.
+- 계산 버튼을 누를 때마다 `/api/holidays`가 구글 검색(Gemini 검색 근거 기능)으로 해당 월 공휴일을 조회합니다.
 - 코드에는 고정 공휴일·대체공휴일 계산과 2026·2027년 음력 공휴일이 기본값으로 들어 있어, 조회가 실패하면 이 값으로 계산하고 화면에 경고를 띄웁니다. (임시공휴일·선거일은 조회로만 반영됩니다.)
 - 조회 결과는 화면에서 직접 수정한 뒤 다시 계산할 수 있습니다.
 
